@@ -100,113 +100,11 @@ class Mozafari2018(nn.Module):
     def punish(self):
         self.anti_stdp(self.ctx["input_spikes"], self.ctx["potentials"], self.ctx["output_spikes"], self.ctx["winners"])
 
-# class S1C1Transform:
-#     def __init__(self, filter, pooling_size, pooling_stride, lateral_inhibition = None, timesteps = 15,
-#               feature_wise_inhibition=True):
-#         self.grayscale = transforms.Grayscale()
-#         self.to_tensor = transforms.ToTensor()
-#         self.filter = filter
-#         self.pooling_size = pooling_size
-#         self.pooling_stride = pooling_stride
-#         self.lateral_inhibition = lateral_inhibition
-#         self.temporal_transform = utils.Intensity2Latency(timesteps)
-#         self.feature_wise_inhibition = feature_wise_inhibition
-
-#     def __call__(self, image):
-#         image = self.to_tensor(self.grayscale(image))
-#         image.unsqueeze_(0)
-#         image = self.filter(image)
-#         image = sf.pooling(image, self.pooling_size, self.pooling_stride, padding=self.pooling_size//2)
-#         if self.lateral_inhibition is not None:
-#             image = self.lateral_inhibition(image)
-#         temporal_image = self.temporal_transform(image)
-#         temporal_image = sf.pointwise_inhibition(temporal_image)
-#         return temporal_image.sign().byte()
-
-# kernels = [	utils.GaborKernel(5, 45+22.5),
-#             utils.GaborKernel(5, 90+22.5),
-#             utils.GaborKernel(5, 135+22.5),
-#             utils.GaborKernel(5, 180+22.5)]
-
-# filter = utils.Filter(kernels, use_abs = True)
-
-
-
-# class S1C1Transform:
-#     def __init__(self, filter, timesteps = 15):
-#         self.to_tensor = transforms.ToTensor()
-#         self.filter = filter
-#         self.temporal_transform = utils.Intensity2Latency(timesteps)
-#         self.cnt = 0
-#     def __call__(self, image):
-#         if self.cnt % 1000 == 0:
-#             print(self.cnt)
-#         self.cnt+=1
-#         image = self.to_tensor(image) * 255
-#         image.unsqueeze_(0)
-#         image = self.filter(image)
-#         image = sf.local_normalization(image, 8)
-#         temporal_image = self.temporal_transform(image)
-#         return temporal_image.sign().byte()
-
-# kernels = [	utils.GaborKernel(5, 45+22.5),
-#             utils.GaborKernel(5, 90+22.5),
-#             utils.GaborKernel(5, 135+22.5),
-#             utils.GaborKernel(5, 180+22.5)]
-# filter = utils.Filter(kernels, use_abs = True)
-# s1 = S1C1Transform(filter)
-
-
-
-
-
-
 
 
 lateral_inhibition = utils.LateralIntencityInhibition([0.15, 0.12, 0.1, 0.07, 0.05])
-
-# task = "Caltech"
 use_cuda = True
-
-# if task == "Caltech":
-#     s1c1 = S1C1Transform(filter, 7, 6, lateral_inhibition)
-#     trainsetfolder = utils.CacheDataset(ImageFolder("facemotortrain", s1c1))
-#     testsetfolder = utils.CacheDataset(ImageFolder("facemotortest", s1c1))
-#     mozafari = Mozafari2018(4, 10, 2, (17,17), 42, (0.005, -0.0025), (-0.005, 0.0005), 0.5)
-#     trainset = DataLoader(trainsetfolder, batch_size = len(trainsetfolder), shuffle = True)
-#     testset = DataLoader(testsetfolder, batch_size = len(testsetfolder), shuffle = True)
-#     max_epoch = 400
-# elif task == "ETH":
-#     s1c1 = S1C1Transform(filter, 5, 4, lateral_inhibition)
-#     mozafari = Mozafari2018(4, 10, 8, (31,31), 160, (0.01, -0.0035), (-0.01, 0.0006), 0.4)
-
-#     def target_transform(target):
-#         return target//10
-#     datafolder = utils.CacheDataset(ImageFolder("eth80-cropped-close128", s1c1, target_transform=target_transform))
-#     test_instances = np.random.randint(0, 10, 8)
-#     train_indices = set(range(len(datafolder)))
-#     test_indices = set()
-#     for c in range(8):
-#         for i in range(41):
-#             test_indices.add(c * 410 + test_instances[c] * 41 + i)
-#     train_indices -= test_indices
-#     train_indices = list(train_indices)
-#     test_indices = list(test_indices)
-#     trainset = DataLoader(datafolder, batch_size = 8 * 9 * 41, sampler=torch.utils.data.SubsetRandomSampler(train_indices))
-#     testset = DataLoader(datafolder, batch_size = 8 * 1 * 41, sampler=torch.utils.data.SubsetRandomSampler(test_indices))
-#     max_epoch = 250
-# elif task == "Norb":
-#     s1c1 = S1C1Transform(filter, 5, 4, lateral_inhibition, timesteps=30)
-#     trainsetfolder = utils.CacheDataset(ImageFolder("norb/train", s1c1))
-#     testsetfolder = utils.CacheDataset(ImageFolder("norb/test", s1c1))
-#     mozafari = Mozafari2018(4, 10, 5, (23,23), 150, (0.05, -0.003), (-0.05, 0.0005), 0.5)
-#     trainset = DataLoader(trainsetfolder, batch_size = len(trainsetfolder), shuffle = True)
-#     testset = DataLoader(testsetfolder, batch_size = len(testsetfolder), shuffle = True)
-max_epoch = 800
-
-
-# s1 = S1C1Transform(filter, 5, 4, lateral_inhibition)
-
+max_epoch = 400
 
 class S1C1Transform:
     def __init__(self, filter, timesteps = 10):
@@ -327,26 +225,3 @@ for epoch in range(max_epoch):
     anp_adapt = anp * (perf_train[0] * adaptive_int + adaptive_min)
     mozafari.update_learning_rates(apr_adapt, anr_adapt, app_adapt, anp_adapt)
     
-# # Features #
-# feature = torch.tensor([
-#     [
-#         [1]
-#     ]
-#     ]).float()
-# if use_cuda:
-#     feature = feature.cuda()
-
-# cstride = (1,1)
-
-# # S1 Features #
-# if use_cuda:
-#     feature,cstride = vis.get_deep_feature(feature, cstride, (filter.max_window_size, filter.max_window_size), (1,1), filter.kernels.cuda())
-# else:
-#     feature,cstride = vis.get_deep_feature(feature, cstride, (filter.max_window_size, filter.max_window_size), (1,1), filter.kernels)
-# # C1 Features #
-# feature,cstride = vis.get_deep_feature(feature, cstride, (s1.pooling_size, s1.pooling_size), (s1.pooling_stride, s1.pooling_stride))
-# # S2 Features #
-# feature,cstride = vis.get_deep_feature(feature, cstride, mozafari.kernel_size, (1,1), mozafari.s2.weight)
-
-# for i in range(mozafari.number_of_features):
-#     vis.plot_tensor_in_image('feature_s2_'+str(i).zfill(4)+'.png',feature[i])
